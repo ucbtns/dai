@@ -1,145 +1,74 @@
 
 """
-@author: vilmarith
+@author: Noor Sajid
 
 Stochastic environment 
 """
 
-import os
-os.chdir('D:/PhD/Code/bayes')
 import numpy as np
 from brl import BRLAgent
 from ql import QLAgent
-import matplotlib.pyplot as plt
-import pandas as pd
 
 
-# Inital parameters:
-number_trials = 200
-num_episodes = 500
-num_iterations = 100
-max_steps_per_episode = 100
-odd = []
 
-# Envirnment details:
-env1 = 'FrozenLakeEnv-v1'
-env2 = 'FrozenLakeEnv-v2'
 
-BRL_tr = np.zeros((num_episodes, number_trials))
-BRL_ts = np.zeros((num_episodes, number_trials))
-BRL_tr_online = np.zeros((num_episodes, number_trials))
-BRL_ts_online = np.zeros((num_episodes, number_trials))
+def deterministic(num, number_trials=200, num_episodes=500, num_iterations=100, max_steps_per_episode=100,
+               env1 = 'FrozenLakeEnv-v1', env2= 'FrozenLakeEnv-v2',
+               alpha=0.5, gamma=0.99, max_er=1, min_er=0.01, exploration_decay_rate=0.001):
+    
+    odd = []
 
-# Bayesian agent (using thompson sampling):
-for trial in range(number_trials):    
-    brlagent = BRLAgent(num_episodes,num_iterations, max_steps_per_episode, env1, env2,odd, a_t=1, b_t=1, a_r=1, b_r=1, k=2) 
-    BRL_tr[:,trial], BRL_ts[:,trial], QBR, BRL_tr_online[:,trial], BRL_ts_online[:,trial]  = brlagent.simulator()
-
-brl_rewards_means = np.mean(BRL_tr_online, axis = 1)
-#br = BRL_tr_online.flatten(order='F')
-
-np.save('brl_tr_det_online.npy', BRL_tr_online) 
-np.save('brl_ts_det_online.npy', BRL_ts_online) 
+    # Bayesian agent (using thompson sampling):    
+    BRL_tr = np.zeros((num_episodes, number_trials))
+    BRL_ts = np.zeros((num_episodes, number_trials))
+    BRL_tr_online = np.zeros((num_episodes, number_trials))
+    BRL_ts_online = np.zeros((num_episodes, number_trials))
+    
+    # Q-Learning agent with exploration:
+    QL_tr = np.zeros((num_episodes, number_trials))
+    QL_ts = np.zeros((num_episodes, number_trials))
+    QL_tr_online = np.zeros((num_episodes, number_trials))
+    QL_ts_online = np.zeros((num_episodes, number_trials))
+    
+    # Q-Learning agent with no exploration:
+    QL_tr_no = np.zeros((num_episodes, number_trials))
+    QL_ts_no = np.zeros((num_episodes, number_trials))
+    QL_tr_online_no = np.zeros((num_episodes, number_trials))
+    QL_ts_online_no = np.zeros((num_episodes, number_trials))  
+    
+    
+    for trial in range(number_trials):    
+        
+        if trial % 5 == 0:
+            print('Percent complete:', 100*(trial/number_trials))
+        
+        brlagent = BRLAgent(num_episodes,num_iterations, max_steps_per_episode, env1, env2,odd, a_t=1, b_t=1, a_r=1, b_r=1, k=2) 
+        BRL_tr[:,trial], BRL_ts[:,trial], QBR, BRL_tr_online[:,trial], BRL_ts_online[:,trial]  = brlagent.simulator()
        
-# Q-Learning agent with little exploration:
-QL_tr_no = np.zeros((num_episodes, number_trials))
-QL_ts_no = np.zeros((num_episodes, number_trials))
-QL_tr_online_no = np.zeros((num_episodes, number_trials))
-QL_ts_online_no = np.zeros((num_episodes, number_trials))
-
-alpha = 0.5
-gamma = 0.99
-epsilon = 0.3 # 1
-max_er = 1
-min_er = 0.01
-exploration_decay_rate = 0.001
-
-
-for trial in range(number_trials):    
-    qlagent = QLAgent(num_episodes, max_steps_per_episode, env1, env2,odd, gamma,
-                      alpha,epsilon, max_er, min_er, exploration_decay_rate)    
-    QL_tr_no[:,trial], QL_ts_no[:,trial], QQ , QL_tr_online_no[:,trial], QL_ts_online_no[:,trial] = qlagent.simulator()
-
-qlno_rewards_means = np.mean(QL_tr_online_no, axis = 1) 
-
-np.save('ql_tr_det_online_no.npy', QL_tr_online_no) 
-np.save('ql_ts_det_online_no.npy', QL_ts_online_no)
-
-
-# Q-Learning agent:
-QL_tr = np.zeros((num_episodes, number_trials))
-QL_ts = np.zeros((num_episodes, number_trials))
-QL_tr_online = np.zeros((num_episodes, number_trials))
-QL_ts_online = np.zeros((num_episodes, number_trials))
-
-alpha = 0.5
-gamma = 0.99
-epsilon = 1
-max_er = 1
-min_er = 0.01
-exploration_decay_rate = 0.001
-
-
-for trial in range(number_trials):    
-    qlagent = QLAgent(num_episodes, max_steps_per_episode, env1, env2,odd, gamma,
-                      alpha,epsilon, max_er, min_er, exploration_decay_rate)    
-    QL_tr[:,trial], QL_ts[:,trial], QQ , QL_tr_online[:,trial], QL_ts_online[:,trial] = qlagent.simulator()
-
-ql_rewards_means = np.mean(QL_tr_online, axis = 1) 
-
-np.save('ql_tr_det_online.npy', QL_tr_online) 
-np.save('ql_ts_det_online.npy', QL_ts_online) 
- 
-
-# active infenrece:
-trwp = pd.read_csv('trwp.csv', header=None)
-trwp_rewards = np.array(np.where(trwp == 1, 100, 0))
-trwp_rewards_means = np.mean(trwp_rewards, axis = 1)
-
-
-trwop = pd.read_csv('trwop.csv', header=None)
-trwop_rewards = np.where(trwop == 1, 100, 0)
-trwop_rewards_means = np.mean(trwop_rewards, axis = 1)
-
-
-# Plotting the results for 
-
-with plt.style.context('seaborn-whitegrid'):
-    plt.figure(figsize=(12,9))
-    plt.plot(range(499),brl_rewards_means[:-1], label='Bayesian RL',linewidth=2)
-    plt.plot(range(499),qlno_rewards_means[:-1], label='Q-Learning (exploration_', linewidth=2)
-    plt.plot(range(499),ql_rewards_means[:-1], label='Q-Learning with exploration', linewidth=2)
-    #plt.plot(range(499),trwp_rewards_means[:-1], label='Active Inference (preferences)', linewidth=2)
-    #plt.plot(range(499),trwop_rewards_means[:-1], label='Active Inference', linewidth=2)
+        qlagent = QLAgent(num_episodes, max_steps_per_episode, env1, env2,odd, gamma,
+                          alpha,1, max_er, min_er, exploration_decay_rate)    
+        QL_tr[:,trial], QL_ts[:,trial], QQ , QL_tr_online[:,trial], QL_ts_online[:,trial] = qlagent.simulator()
+      
+        qlagent = QLAgent(num_episodes, max_steps_per_episode, env1, env2,odd, gamma,
+                          alpha,0.1, max_er, min_er, exploration_decay_rate)    
+        QL_tr_no[:,trial], QL_ts_no[:,trial], QQ , QL_tr_online_no[:,trial], QL_ts_online_no[:,trial] = qlagent.simulator()
+        
     
-    plt.grid()
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.title("Deterministic Environment Performance")
-    plt.xlabel("Episode")
-    plt.ylabel("Average Reward")
-plt.show()
-
-
-
-
-plt.rcParams.update({'font.size': 18})
-with plt.style.context('seaborn-whitegrid'):
-    plt.figure(figsize=(12,10))
+    np.save('brl_tr_det_online' + str(num) +'.npy', BRL_tr_online) 
+    np.save('brl_ts_det_online' + str(num) +'.npy', BRL_ts_online) 
+           
+    np.save('ql_tr_det_online' + str(num) +'.npy', QL_tr_online) 
+    np.save('ql_ts_det_online' + str(num) +'.npy', QL_ts_online) 
     
-    plt.plot(range(499),qlno_rewards_means[:-1], label='Q-Learning', linewidth=1)
-    plt.plot(range(499),ql_rewards_means[:-1], label='Q-Learning (exploration)', linewidth=1)    
-    plt.plot(range(499),brl_rewards_means[:-1], label='Bayesian RL',linewidth=1)
+    np.save('ql_tr_det_online_no' + str(num) +'.npy', QL_tr_online_no) 
+    np.save('ql_ts_det_online_no' + str(num) +'.npy', QL_ts_online_no) 
     
-    #plt.plot(range(499),trwp_rewards_means[:-1], label='Active Inference (preferences)', linewidth=2)
-    #plt.plot(range(499),trwop_rewards_means[:-1], label='Active Inference', linewidth=1)    
     
-    plt.grid()
-    plt.legend(loc='best', bbox_to_anchor=(1, 0.5), fontsize=15)
-    plt.xlabel("Episode")
-    plt.ylabel("Average Reward")
-    plt.xlim(0, 500)
-    plt.ylim(0,101)
-plt.show()
+    np.save('brl_tr_det_' + str(num) +'.npy', BRL_tr) 
+    np.save('ql_tr_det_' + str(num) +'.npy', QL_tr) 
+    np.save('ql_tr_det_no' + str(num) +'.npy', QL_tr_no) 
+    
+    print('Simulation completed')
 
 
 
