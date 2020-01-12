@@ -74,10 +74,12 @@ class QLAgent():
                   exploration_rate_threshold = random.uniform(0, 1)
                   
                   if exploration_rate_threshold > self.epsilon:
-                      action = np.argmax(Q[:, state]) # Exploitation: maximum action based on current Q-table values
+                      #action = np.argmax(Q[:, state]) # Exploitation: maximum action based on current Q-table values
+                      action = ut.argmaxrand(Q[:, state]) 
                   else:
                       action = self.env.action_space.sample() # Exploration: random action
                   
+                  #self.env.render()
                   new_state, reward, done, info = self.env.step(action) #act
                   
                   Q[action,state] = (1-self.alpha)*Q[action,state] + self.alpha * (reward + self.gamma * np.max(Q[:, new_state])) # update Q value
@@ -87,11 +89,12 @@ class QLAgent():
                   if done: 
                       break
                   
+            self.epsilon = self.miner + (self.maxer - self.miner) * np.exp(-self.exploration_decay_rate*episode)                   
             self.tr_online[episode], self.ts_online[episode]  = reward, step+1
                   
                     
             # Updating the exploration rate: 
-            self.exploration_rate = self.miner + (self.maxer - self.miner) * np.exp(-self.exploration_decay_rate*episode)   
+              
             self.tr[episode], self.ts[episode] = ut.play_episode(Q, self.env, self.max_steps_per_episode, render = False)
             
         return self.tr, self.ts, Q, self.tr_online, self.ts_online
