@@ -1,9 +1,9 @@
 clear 
 clc
 
-addpath D:\PhD\Code\bayes
-addpath D:\PhD\Code\spm\
-addpath D:\PhD\Code\spm\toolbox\DEM
+addpath ~\bayes
+addpath ~\spm\
+addpath ~\toolbox\DEM
 
 num_trials = 200;
 num_episodes = 500;
@@ -39,7 +39,7 @@ trwp = zeros(num_episodes, num_trials);
      end    
  end
  
-  csvwrite('D:\PhD\Code\bayes\trwp_modified.csv',trwp)
+  csvwrite('~\trwp_modified.csv',trwp)
   
   
 % Without preferences: 
@@ -77,7 +77,7 @@ trwp = zeros(num_episodes, num_trials);
 
 
 %plotting in python
-csvwrite('D:\PhD\Code\bayes\trwop_modified.csv',trwop)
+csvwrite('~\trwop_modified.csv',trwop)
 
 
 % Deterministic: 
@@ -108,7 +108,7 @@ trwop_det = zeros(num_episodes, num_trials);
      end    
  end
  
- csvwrite('D:\PhD\Code\bayes\trwp_det_modified.csv',trwp_det)
+ csvwrite('~\trwp_det_modified.csv',trwp_det)
 
 % without preferences: 
  for j = 1:num_trials
@@ -134,6 +134,6 @@ trwop_det = zeros(num_episodes, num_trials);
             
      end    
  end
-csvwrite('D:\PhD\Code\bayes\trwop_det_modfiied.csv',trwop_det)
+csvwrite('~\trwop_det_modfiied.csv',trwop_det)
 
 
